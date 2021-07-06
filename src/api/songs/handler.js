@@ -6,6 +6,7 @@ class SongsHandler {
     this._validator = validator;
 
     this.postSongHandler = this.postSongHandler.bind(this);
+    this.getAllSongsHandler = this.getAllSongsHandler.bind(this);
   }
 
   async postSongHandler(request, h) {
@@ -43,6 +44,34 @@ class SongsHandler {
         return response;
       }
 
+      const response = h.response({
+        status: 'error',
+        message: 'Maaf, terjadi kegagalan pada server kami.',
+      });
+
+      console.log(error);
+
+      response.code(500);
+
+      return response;
+    }
+  }
+
+  async getAllSongsHandler(request, h) {
+    try {
+      const songs = await this._service.getAllSongs();
+
+      const response = h.response({
+        status: 'success',
+        data: {
+          songs,
+        },
+      });
+
+      response.code(200);
+
+      return response;
+    } catch (error) {
       const response = h.response({
         status: 'error',
         message: 'Maaf, terjadi kegagalan pada server kami.',

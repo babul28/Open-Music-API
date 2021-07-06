@@ -4,6 +4,12 @@ const routes = (handler) => [
     path: '/songs',
     handler: handler.postSongHandler,
   },
+  {
+    method: 'GET',
+    path: '/songs',
+    handler: handler.getAllSongsHandler,
+  },
+
 ];
 
 module.exports = routes;
