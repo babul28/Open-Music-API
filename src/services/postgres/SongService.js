@@ -67,7 +67,20 @@ class SongService {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
-      throw new NotFoundError('Gagal memperbarui catatan. Id tidak ditemukan');
+      throw new NotFoundError('Cannot update the song. Id not found!');
+    }
+  }
+
+  async destorySongById(songId) {
+    const query = {
+      text: 'DELETE FROM songs WHERE id = $1 RETURNING id',
+      values: [songId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) {
+      throw new NotFoundError('Cannot delete the song. Id not found!');
     }
   }
 }
