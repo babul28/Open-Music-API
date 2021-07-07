@@ -1,15 +1,15 @@
-const responseByClientError = (h, error) => {
+const responseByClientError = (h, { message, statusCode }) => {
   const response = h.response({
     status: 'fail',
-    message: error.message,
+    message,
   });
 
-  response.code(error.statusCode);
+  response.code(statusCode);
 
   return response;
 };
 
-const responseByServerError = (h, error) => {
+const responseByServerError = (h, error = 'Server Error') => {
   const response = h.response({
     status: 'error',
     message: 'Maaf, terjadi kegagalan pada server kami.',
@@ -22,4 +22,16 @@ const responseByServerError = (h, error) => {
   return response;
 };
 
-module.exports = { responseByClientError, responseByServerError };
+const successResponse = (h, { data = {}, message = '', statusCode = 200 }) => {
+  const response = h.response({
+    status: 'success',
+    message,
+    data,
+  });
+
+  response.code(statusCode);
+
+  return response;
+};
+
+module.exports = { responseByClientError, responseByServerError, successResponse };

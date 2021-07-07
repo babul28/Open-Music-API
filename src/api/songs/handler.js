@@ -1,5 +1,5 @@
 const ClientError = require('../../exceptions/ClientError');
-const { responseByClientError, responseByServerError } = require('../../utils/responseHelper');
+const { responseByClientError, responseByServerError, successResponse } = require('../../utils/responseHelper');
 
 class SongsHandler {
   constructor(service, validator) {
@@ -19,17 +19,11 @@ class SongsHandler {
 
       const songId = await this._service.storeNewSong(request.payload);
 
-      const response = h.response({
-        status: 'success',
-        message: 'Song berhasil ditambahkan',
-        data: {
-          songId,
-        },
+      return successResponse(h, {
+        message: 'Successfully create new song',
+        data: { songId },
+        statusCode: 201,
       });
-
-      response.code(201);
-
-      return response;
     } catch (error) {
       if (error instanceof ClientError) {
         return responseByClientError(h, error);
@@ -43,16 +37,10 @@ class SongsHandler {
     try {
       const songs = await this._service.getAllSongs();
 
-      const response = h.response({
-        status: 'success',
-        data: {
-          songs,
-        },
+      return successResponse(h, {
+        message: 'Successfully get all songs',
+        data: { songs },
       });
-
-      response.code(200);
-
-      return response;
     } catch (error) {
       return responseByServerError(h, error);
     }
@@ -64,16 +52,10 @@ class SongsHandler {
 
       const song = await this._service.findSongById(songId);
 
-      const response = h.response({
-        status: 'success',
-        data: {
-          song,
-        },
+      return successResponse(h, {
+        message: 'Successfully get specified song',
+        data: { song },
       });
-
-      response.code(200);
-
-      return response;
     } catch (error) {
       if (error instanceof ClientError) {
         return responseByClientError(h, error);
@@ -91,14 +73,9 @@ class SongsHandler {
 
       await this._service.updateSongById(songId, request.payload);
 
-      const response = h.response({
-        status: 'success',
+      return successResponse(h, {
         message: 'Successfully update a specified song',
       });
-
-      response.code(200);
-
-      return response;
     } catch (error) {
       if (error instanceof ClientError) {
         return responseByClientError(h, error);
@@ -123,14 +100,9 @@ class SongsHandler {
 
       await this._service.destorySongById(songId);
 
-      const response = h.response({
-        status: 'success',
+      return successResponse(h, {
         message: 'Successfully delete a specified song',
       });
-
-      response.code(200);
-
-      return response;
     } catch (error) {
       if (error instanceof ClientError) {
         return responseByClientError(h, error);
