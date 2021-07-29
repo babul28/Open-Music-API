@@ -19,6 +19,11 @@ const AuthenticationService = require('./services/postgres/AuthenticationService
 const TokenManager = require('./tokenize/TokenManager');
 const AuthenticationsValidator = require('./validator/authentications');
 
+// Playlists
+const playlists = require('./api/playlists/index');
+const PlaylistService = require('./services/postgres/PlaylistService');
+const PlaylistValidator = require('./validator/playlists/index');
+
 const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT,
@@ -38,7 +43,7 @@ const init = async () => {
   ]);
 
   // Define strategy for authentication user
-  server.auth.strategy('notesapp_jwt', 'jwt', {
+  server.auth.strategy('openmusic_jwt', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
     verify: {
       aud: false,
@@ -79,6 +84,13 @@ const init = async () => {
         userService,
         tokenManager: TokenManager,
         validator: AuthenticationsValidator,
+      },
+    },
+    {
+      plugin: playlists,
+      options: {
+        service: new PlaylistService(),
+        validator: PlaylistValidator,
       },
     },
   ]);
