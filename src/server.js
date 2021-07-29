@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 
 // Songs
 const songs = require('./api/songs/index');
@@ -11,6 +12,12 @@ const SongValidator = require('./validator/songs/index');
 const users = require('./api/users/index');
 const UserService = require('./services/postgres/UserService');
 const UserValidator = require('./validator/users/index');
+
+// Authentications
+const authentications = require('./api/authentications');
+const AuthenticationService = require('./services/postgres/AuthenticationService');
+const TokenManager = require('./tokenize/TokenManager');
+const AuthenticationsValidator = require('./validator/authentications');
 
 const init = async () => {
   const server = Hapi.server({
@@ -23,6 +30,33 @@ const init = async () => {
     },
   });
 
+  // registrasi plugin eksternal
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+  ]);
+
+  // Define strategy for authentication user
+  server.auth.strategy('notesapp_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
+  });
+
+  const userService = new UserService();
+
+  // register custom plugin
   await server.register([
     {
       plugin: songs,
@@ -34,8 +68,17 @@ const init = async () => {
     {
       plugin: users,
       options: {
-        service: new UserService(),
+        service: userService,
         validator: UserValidator,
+      },
+    },
+    {
+      plugin: authentications,
+      options: {
+        authenticationService: new AuthenticationService(),
+        userService,
+        tokenManager: TokenManager,
+        validator: AuthenticationsValidator,
       },
     },
   ]);
