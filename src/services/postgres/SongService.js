@@ -12,7 +12,7 @@ class SongService {
   async storeNewSong({
     title, year, performer, genre, duration,
   }) {
-    const id = nanoid(16);
+    const id = `song-${nanoid(16)}`;
     const insertedAt = new Date().toISOString();
     const updatedAt = insertedAt;
 
@@ -44,7 +44,7 @@ class SongService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Song is Not Found!!');
     }
 
@@ -66,7 +66,7 @@ class SongService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Cannot update the song. Id not found!');
     }
   }
@@ -79,7 +79,7 @@ class SongService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Cannot delete the song. Id not found!');
     }
   }
