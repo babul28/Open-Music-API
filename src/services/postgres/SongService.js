@@ -5,8 +5,9 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const mapDBToModel = require('../../utils/mapDBToModel');
 
 class SongService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async storeNewSong({
@@ -27,13 +28,23 @@ class SongService {
       throw new InvariantError('Song gagal ditambahkan');
     }
 
+    await this._cacheService.delete(this._generateSongsCacheName());
+
     return result.rows[0].id;
   }
 
   async getAllSongs() {
-    const result = await this._pool.query('SELECT id, title, performer FROM songs');
+    try {
+      const result = await this._cacheService.get(this._generateSongsCacheName());
 
-    return result.rows;
+      return JSON.parse(result);
+    } catch (error) {
+      const result = await this._pool.query('SELECT id, title, performer FROM songs');
+
+      await this._cacheService.set(this._generateSongsCacheName(), JSON.stringify(result.rows));
+
+      return result.rows;
+    }
   }
 
   async findSongById(songId) {
@@ -69,6 +80,8 @@ class SongService {
     if (!result.rowCount) {
       throw new NotFoundError('Cannot update the song. Id not found!');
     }
+
+    await this._cacheService.delete(this._generateSongsCacheName());
   }
 
   async destorySongById(songId) {
@@ -82,6 +95,13 @@ class SongService {
     if (!result.rowCount) {
       throw new NotFoundError('Cannot delete the song. Id not found!');
     }
+
+    await this._cacheService.delete(this._generateSongsCacheName());
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  _generateSongsCacheName() {
+    return 'songs';
   }
 }
 

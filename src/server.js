@@ -87,11 +87,11 @@ const init = async () => {
     }),
   });
 
-  const songService = new SongService();
+  const cacheService = new CacheService();
+  const songService = new SongService(cacheService);
   const userService = new UserService();
   const authenticationService = new AuthenticationService();
   const collaborationService = new CollaborationService();
-  const cacheService = new CacheService();
   const playlistService = new PlaylistService(collaborationService, cacheService);
   const playlistSongService = new PlaylistSongService(songService, cacheService);
   const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
