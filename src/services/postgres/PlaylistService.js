@@ -5,9 +5,10 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistService {
-  constructor(collaborationService) {
+  constructor(collaborationService, cacheService) {
     this._pool = new Pool();
     this._collaborationService = collaborationService;
+    this._cacheService = cacheService;
   }
 
   async storeNewPlaylist({ name, owner }) {
@@ -53,6 +54,8 @@ class PlaylistService {
     if (!result.rowCount) {
       throw new NotFoundError('Playlist gagal dihapus, Id tidak ditemukan');
     }
+
+    await this._cacheService.delete(`playlists:${id}:songs`);
   }
 
   async findPlaylistById(playlistId) {

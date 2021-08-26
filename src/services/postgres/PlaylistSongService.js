@@ -3,9 +3,10 @@ const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
 
 class PlaylistSongService {
-  constructor(songService) {
+  constructor(songService, cacheService) {
     this._pool = new Pool();
     this._songService = songService;
+    this._cahceService = cacheService;
   }
 
   async addSongToPlaylist(playlistId, songId) {
@@ -23,18 +24,30 @@ class PlaylistSongService {
     if (!result.rowCount) {
       throw new InvariantError('Lagu gagal ditambahkan ke playlist');
     }
+
+    await this._cahceService.delete(this._generatePlaylistSongsCacheName(playlistId));
   }
 
   async getAllPlaylistSongs(playlistId) {
-    const query = {
-      text: `SELECT s.id, s.title, s.performer FROM playlists p, playlist_songs ps, songs s
+    const playlistSongsCacheName = this._generatePlaylistSongsCacheName(playlistId);
+
+    try {
+      const result = await this._cahceService.get(playlistSongsCacheName);
+
+      return JSON.parse(result);
+    } catch ($error) {
+      const query = {
+        text: `SELECT s.id, s.title, s.performer FROM playlists p, playlist_songs ps, songs s
               WHERE p.id = $1 AND p.id = ps.playlist_id AND s.id = ps.song_id`,
-      values: [playlistId],
-    };
+        values: [playlistId],
+      };
 
-    const result = await this._pool.query(query);
+      const result = await this._pool.query(query);
 
-    return result.rows;
+      await this._cahceService.set(playlistSongsCacheName, JSON.stringify(result.rows));
+
+      return result.rows;
+    }
   }
 
   async deleteSongFromPlaylist(playlistId, songId) {
@@ -48,6 +61,13 @@ class PlaylistSongService {
     if (!result.rowCount) {
       throw new InvariantError('Lagu gagal dihapus dari playlist, id lagu tidak ditemukan');
     }
+
+    await this._cahceService.delete(this._generatePlaylistSongsCacheName(playlistId));
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  _generatePlaylistSongsCacheName(playlistId) {
+    return `playlists:${playlistId}:songs`;
   }
 }
 

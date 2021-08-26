@@ -46,6 +46,9 @@ const uploads = require('./api/uploads');
 const StorageService = require('./services/storage/StorageService');
 const UploadsValidator = require('./validator/uploads');
 
+// Cache
+const CacheService = require('./services/redis/CacheService');
+
 const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT,
@@ -88,8 +91,9 @@ const init = async () => {
   const userService = new UserService();
   const authenticationService = new AuthenticationService();
   const collaborationService = new CollaborationService();
-  const playlistService = new PlaylistService(collaborationService);
-  const playlistSongService = new PlaylistSongService(songService);
+  const cacheService = new CacheService();
+  const playlistService = new PlaylistService(collaborationService, cacheService);
+  const playlistSongService = new PlaylistSongService(songService, cacheService);
   const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
 
   // register custom plugin
